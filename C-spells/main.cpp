@@ -26,7 +26,8 @@ int main() {
     cin >> a[i];
   }
   for (int i = 0; i < n; ++i) {
-    long long k = (TryToFindMin(a, optimization, i, n)) * a[i];
+    long long y = (TryToFindMin(a, optimization, i, n)), x = a[i];
+    long long k = x * y;
     max1 = max(max1, k);
   }
   cout << max1;
