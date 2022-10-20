@@ -1,33 +1,50 @@
-#include <cmath>
-#include <iomanip>
 #include <iostream>
-int main() {
-  int count;
-  std::cin >> count;
-  long double* height = new long double[count];
-  long double* prefix_log = new long double[count];
-  std::cin >> height[0];
-  prefix_log[0] = log2l(height[0]);
-  for (int i = 1; i < count; ++i) {
-    std::cin >> height[i];
-    prefix_log[i] = prefix_log[i - 1] + log2l(height[i]);
+#include <random>
+int FindPartitionIndex(int* array, const int kLeftIndex,
+                       const int kRightIndex) {
+  if (kLeftIndex == kRightIndex) {
+    return kLeftIndex;
   }
-  int q;
-  std::cin >> q;
-  for (int i = 0; i < q; ++i) {
-    int leftindex, rightindex;
-    std::cin >> leftindex >> rightindex;
-    long double resultlog;
-    if (leftindex == 0) {
-      resultlog = prefix_log[rightindex];
-    } else {
-      resultlog = prefix_log[rightindex] - prefix_log[leftindex - 1];
+  std::mt19937 rnd(1234);
+  int pivot = (rand() % (kRightIndex - kLeftIndex + 1)) + kLeftIndex;
+  pivot = array[pivot];
+  int k_left_pointer = kLeftIndex;
+  int k_right_pointer = kRightIndex;
+  while (k_left_pointer <= k_right_pointer) {
+    while (array[k_left_pointer] < pivot) {
+      ++k_left_pointer;
     }
-    resultlog = resultlog / (rightindex - leftindex + 1);
-    std::cout << std::fixed << std::showpoint << std::setprecision(6);
-    std::cout << exp2l(resultlog) << "\n";
+    while (pivot < array[k_right_pointer]) {
+      --k_right_pointer;
+    }
+    if (k_left_pointer >= k_right_pointer) {
+      break;
+    }
+    std::swap(array[k_left_pointer++], array[k_right_pointer--]);
   }
-  delete[] height;
-  delete[] prefix_log;
+  return k_right_pointer;
+}
+
+void DoQuickSort(int* array, const int kLeftIndex, const int kRightIndex) {
+  if (kLeftIndex >= kRightIndex) {
+    return;
+  }
+  int k_partition_index = FindPartitionIndex(array, kLeftIndex, kRightIndex);
+  DoQuickSort(array, kLeftIndex, k_partition_index);
+  DoQuickSort(array, k_partition_index + 1, kRightIndex);
+}
+
+int main() {
+  int size;
+  std::cin >> size;
+  int* array = new int[size];
+  for (int i = 0; i < size; ++i) {
+    std::cin >> array[i];
+  }
+  DoQuickSort(array, 0, size - 1);
+  for (int i = 0; i < size; ++i) {
+    std::cout << array[i] << " ";
+  }
+  delete[] array;
   return 0;
 }
