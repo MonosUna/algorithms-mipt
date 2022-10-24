@@ -1,33 +1,25 @@
-#include <cmath>
-#include <iomanip>
 #include <iostream>
 int main() {
-  int count;
-  std::cin >> count;
-  long double* height = new long double[count];
-  long double* prefix_log = new long double[count];
-  std::cin >> height[0];
-  prefix_log[0] = log2l(height[0]);
-  for (int i = 1; i < count; ++i) {
-    std::cin >> height[i];
-    prefix_log[i] = prefix_log[i - 1] + log2l(height[i]);
+  int count, order_statistics;
+  std::cin >> count >> order_statistics;
+  int* array = new int[count];
+  std::cin >> array[0] >> array[1];
+  for (int i = 2; i < count; ++i) {
+    array[i] = (123 * array[i - 1] + 45 * array[i - 2]) % (10'004'321);
   }
-  int q;
-  std::cin >> q;
-  for (int i = 0; i < q; ++i) {
-    int leftindex, rightindex;
-    std::cin >> leftindex >> rightindex;
-    long double resultlog;
-    if (leftindex == 0) {
-      resultlog = prefix_log[rightindex];
-    } else {
-      resultlog = prefix_log[rightindex] - prefix_log[leftindex - 1];
+  int* counting = new int[10'004'321]{0};
+  for (int i = 0; i < count; ++i) {
+    ++counting[array[i]];
+  }
+  int k_cur = 0;
+  for (int i = 0; i < 10'004'321; i++) {
+    k_cur += counting[i];
+    if (k_cur >= order_statistics) {
+      std::cout << i;
+      break;
     }
-    resultlog = resultlog / (rightindex - leftindex + 1);
-    std::cout << std::fixed << std::showpoint << std::setprecision(6);
-    std::cout << exp2l(resultlog) << "\n";
   }
-  delete[] height;
-  delete[] prefix_log;
+  delete[] array;
+  delete[] counting;
   return 0;
 }
