@@ -36,7 +36,7 @@ struct MiniMax {
 
   void GetSize() const { std::cout << count << "\n"; }
 
-  void DoClear();
+  void Clear();
 };
 
 void MiniMax::DoSwapInMin(int vertex1, int vertex2) {
@@ -155,7 +155,7 @@ void MiniMax::GetMax() {
   std::cout << max_heap[1].first << "\n";
 }
 
-void MiniMax::DoClear() {
+void MiniMax::Clear() {
   count = 0;
   std::cout << "ok"
             << "\n";
@@ -183,7 +183,7 @@ void DoRequest(std::string request, MiniMax& my_struct) {
     my_struct.GetSize();
   }
   if (request == "clear") {
-    my_struct.DoClear();
+    my_struct.Clear();
   }
 }
 
