@@ -1,162 +1,151 @@
 #include <iostream>
 #include <vector>
-struct MiniMax {
-  int count;
-  std::vector<std::pair<int, int>> min_heap;
-  std::vector<std::pair<int, int>> max_heap;
-
-  MiniMax() {
-    count = 0;
-    std::vector<std::pair<int, int>> array(200001);
-    min_heap = array;
-    max_heap = array;
-  }
-
-  void DoSwapInMin(int vertex1, int vertex2);
-
-  void DoSwapInMax(int vertex1, int vertex2);
-
+class MiniMax {
+ private:
+  int count_;
+  std::vector<std::pair<int, int>> min_heap_;
+  std::vector<std::pair<int, int>> max_heap_;
+  void SwapInMin(int vertex1, int vertex2);
+  void SwapInMax(int vertex1, int vertex2);
   void MaxSiftUp(int vertex);
-
   void MinSiftUp(int vertex);
-
   void MinSiftDown(int current_element);
-
   void MaxSiftDown(int current_element);
 
+ public:
+  MiniMax() {
+    count_ = 0;
+    std::vector<std::pair<int, int>> array(200001);
+    min_heap_ = array;
+    max_heap_ = array;
+  }
   void Insert(int number);
-
   void ExtractMin();
-
   void ExtractMax();
-
   void GetMin();
-
   void GetMax();
-
-  void GetSize() const { std::cout << count << "\n"; }
-
+  void GetSize() const { std::cout << count_ << "\n"; }
   void Clear();
 };
 
-void MiniMax::DoSwapInMin(int vertex1, int vertex2) {
-  std::swap(max_heap[min_heap[vertex1].second].second,
-            max_heap[min_heap[vertex2].second].second);
-  std::swap(min_heap[vertex1], min_heap[vertex2]);
+void MiniMax::SwapInMin(int vertex1, int vertex2) {
+  std::swap(max_heap_[min_heap_[vertex1].second].second,
+            max_heap_[min_heap_[vertex2].second].second);
+  std::swap(min_heap_[vertex1], min_heap_[vertex2]);
 }
 
-void MiniMax::DoSwapInMax(int vertex1, int vertex2) {
-  std::swap(min_heap[max_heap[vertex1].second].second,
-            min_heap[max_heap[vertex2].second].second);
-  std::swap(max_heap[vertex1], max_heap[vertex2]);
+void MiniMax::SwapInMax(int vertex1, int vertex2) {
+  std::swap(min_heap_[max_heap_[vertex1].second].second,
+            min_heap_[max_heap_[vertex2].second].second);
+  std::swap(max_heap_[vertex1], max_heap_[vertex2]);
 }
 
 void MiniMax::MaxSiftUp(int vertex) {
-  while (vertex != 1 && max_heap[vertex].first > max_heap[vertex / 2].first) {
-    DoSwapInMax(vertex, vertex / 2);
+  while (vertex != 1 && max_heap_[vertex].first > max_heap_[vertex / 2].first) {
+    SwapInMax(vertex, vertex / 2);
     vertex = vertex / 2;
   }
 }
 
 void MiniMax::MinSiftUp(int vertex) {
-  while (vertex != 1 && min_heap[vertex].first < min_heap[vertex / 2].first) {
-    DoSwapInMin(vertex, vertex / 2);
+  while (vertex != 1 && min_heap_[vertex].first < min_heap_[vertex / 2].first) {
+    SwapInMin(vertex, vertex / 2);
     vertex = vertex / 2;
   }
 }
 
 void MiniMax::MinSiftDown(int current_element) {
-  while (2 * current_element <= count) {
+  while (2 * current_element <= count_) {
     int descendant = 2 * current_element;
-    if (2 * current_element + 1 <= count &&
-        min_heap[2 * current_element].first >
-            min_heap[2 * current_element + 1].first) {
+    if (2 * current_element + 1 <= count_ &&
+        min_heap_[2 * current_element].first >
+            min_heap_[2 * current_element + 1].first) {
       descendant = 2 * current_element + 1;
     }
-    if (min_heap[current_element].first <= min_heap[descendant].first) {
+    if (min_heap_[current_element].first <= min_heap_[descendant].first) {
       break;
     }
-    DoSwapInMin(current_element, descendant);
+    SwapInMin(current_element, descendant);
     current_element = descendant;
   }
 }
 
 void MiniMax::MaxSiftDown(int current_element) {
-  while (2 * current_element <= count) {
+  while (2 * current_element <= count_) {
     int descendant = 2 * current_element;
-    if (2 * current_element + 1 <= count &&
-        max_heap[2 * current_element].first <
-            max_heap[2 * current_element + 1].first) {
+    if (2 * current_element + 1 <= count_ &&
+        max_heap_[2 * current_element].first <
+            max_heap_[2 * current_element + 1].first) {
       descendant = 2 * current_element + 1;
     }
-    if (max_heap[current_element].first >= max_heap[descendant].first) {
+    if (max_heap_[current_element].first >= max_heap_[descendant].first) {
       break;
     }
-    DoSwapInMax(current_element, descendant);
+    SwapInMax(current_element, descendant);
     current_element = descendant;
   }
 }
 
 void MiniMax::Insert(int number) {
-  count++;
-  min_heap[count] = std::make_pair(number, count);
-  max_heap[count] = std::make_pair(number, count);
-  MinSiftUp(count);
-  MaxSiftUp(count);
+  count_++;
+  min_heap_[count_] = std::make_pair(number, count_);
+  max_heap_[count_] = std::make_pair(number, count_);
+  MinSiftUp(count_);
+  MaxSiftUp(count_);
   std::cout << "ok"
             << "\n";
 }
 
 void MiniMax::ExtractMin() {
-  if (count == 0) {
+  if (count_ == 0) {
     std::cout << "error"
               << "\n";
     return;
   }
-  std::cout << min_heap[1].first << "\n";
-  int position_of_min = min_heap[1].second;
-  DoSwapInMax(position_of_min, count);
-  DoSwapInMin(1, count);
+  std::cout << min_heap_[1].first << "\n";
+  int position_of_min = min_heap_[1].second;
+  SwapInMax(position_of_min, count_);
+  SwapInMin(1, count_);
   MaxSiftUp(position_of_min);
-  --count;
+  --count_;
   MinSiftDown(1);
 }
 
 void MiniMax::ExtractMax() {
-  if (count == 0) {
+  if (count_ == 0) {
     std::cout << "error"
               << "\n";
     return;
   }
-  std::cout << max_heap[1].first << "\n";
-  int position_of_max = max_heap[1].second;
-  DoSwapInMin(position_of_max, count);
-  DoSwapInMax(1, count);
+  std::cout << max_heap_[1].first << "\n";
+  int position_of_max = max_heap_[1].second;
+  SwapInMin(position_of_max, count_);
+  SwapInMax(1, count_);
   MinSiftUp(position_of_max);
-  --count;
+  --count_;
   MaxSiftDown(1);
 }
 
 void MiniMax::GetMin() {
-  if (count == 0) {
+  if (count_ == 0) {
     std::cout << "error"
               << "\n";
     return;
   }
-  std::cout << min_heap[1].first << "\n";
+  std::cout << min_heap_[1].first << "\n";
 }
 
 void MiniMax::GetMax() {
-  if (count == 0) {
+  if (count_ == 0) {
     std::cout << "error"
               << "\n";
     return;
   }
-  std::cout << max_heap[1].first << "\n";
+  std::cout << max_heap_[1].first << "\n";
 }
 
 void MiniMax::Clear() {
-  count = 0;
+  count_ = 0;
   std::cout << "ok"
             << "\n";
 }
