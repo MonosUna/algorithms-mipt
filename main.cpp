@@ -3,6 +3,8 @@ class Heap {
   int size_;
   long long* array_;
   long long* ptr_;
+  void SiftDown(int current_element);
+  void SiftUp(int current_element);
 
  public:
   Heap(int count) {
@@ -13,8 +15,7 @@ class Heap {
       ptr_[i] = 1'000'000'001;
     }
   }
-  void SiftDown(int current_element);
-  void SiftUp(int current_element);
+
   void Insert(long long number, int number_of_request);
   void GetMin() { std::cout << array_[1] << '\n'; };
   void ExtractMin();
@@ -24,6 +25,7 @@ class Heap {
     delete[] ptr_;
   }
 };
+
 void Heap::SiftDown(int current_element) {
   while (2 * current_element <= size_) {
     int descendant = 2 * current_element;
@@ -38,6 +40,7 @@ void Heap::SiftDown(int current_element) {
     current_element = descendant;
   }
 }
+
 void Heap::SiftUp(int current_element) {
   while (current_element != 1 &&
          array_[current_element] < array_[current_element / 2]) {
@@ -45,15 +48,18 @@ void Heap::SiftUp(int current_element) {
     current_element = current_element / 2;
   }
 }
+
 void Heap::Insert(long long number, int number_of_request) {
   array_[++size_] = number;
   SiftUp(size_);
   ptr_[number_of_request] = number;
 }
+
 void Heap::ExtractMin() {
   std::swap(array_[1], array_[size_--]);
   SiftDown(1);
 }
+
 void Heap::DecreaseKey(int num_of_request, long long difference) {
   int node = 1;
   for (int i = 1; i <= size_; ++i) {
@@ -66,6 +72,7 @@ void Heap::DecreaseKey(int num_of_request, long long difference) {
   }
   SiftUp(node);
 }
+
 int main() {
   std::ios_base::sync_with_stdio(false);
   std::cin.tie(NULL);
