@@ -10,59 +10,23 @@ int MaxDegreeOf2(int number) {
 }
 
 class SparseTable {
+ public:
+  explicit SparseTable(int count, std::vector<int> array) {
+    size_ = count;
+    Preprocessing(array);
+  }
+
+  int FindSecondStatistics(int left, int right) const;
+
  private:
   std::vector<std::vector<int>> table_;
   int size_;
-  int FindMin(int left, int right);
+  int FindMin(int left, int right) const;
 
- public:
-  SparseTable(int count, int* array) {
-    size_ = count;
-    std::vector<int> input;
-    input.clear();
-    input.push_back(0);
-    for (int i = 1; i <= size_; i++) {
-      input.push_back(array[i]);
-    }
-    table_.push_back(input);
-    int indent = 1;
-    if (1 <= std::log2(size_)) {
-      std::vector<int> input2;
-      input2.clear();
-      input2.push_back(0);
-      for (int i = 1; i <= size_; i++) {
-        int right_border = std::min(i + indent, size_);
-        if (table_[0][i] <= table_[0][right_border]) {
-          input2.push_back(i);
-        } else {
-          input2.push_back(right_border);
-        }
-      }
-      table_.push_back(input2);
-      indent *= 2;
-    }
-    for (int k = 2; k <= std::log2(size_); k++) {
-      std::vector<int> input1;
-      input1.clear();
-      input1.push_back(0);
-      for (int i = 1; i <= size_; i++) {
-        int right_border = std::min(i + indent, size_);
-        if (table_[0][table_[k - 1][i]] <=
-            table_[0][table_[k - 1][right_border]]) {
-          input1.push_back(table_[k - 1][i]);
-        } else {
-          input1.push_back(table_[k - 1][right_border]);
-        }
-      }
-      table_.push_back(input1);
-      indent *= 2;
-    }
-  }
-
-  int FindSecondStatistics(int left, int right);
+  void Preprocessing(std::vector<int> array);
 };
 
-int SparseTable::FindMin(int left, int right) {
+int SparseTable::FindMin(int left, int right) const {
   int length = right - left + 1;
   int column = log2(length - 1);
   if (length == 1) {
@@ -81,7 +45,7 @@ int SparseTable::FindMin(int left, int right) {
   return table_[column][left];
 }
 
-int SparseTable::FindSecondStatistics(int left, int right) {
+int SparseTable::FindSecondStatistics(int left, int right) const {
   int left_min = 1'000'000'000, right_min = 1'000'000'000;
   int place_of_min = FindMin(left, right);
   if (left <= place_of_min - 1) {
@@ -93,19 +57,59 @@ int SparseTable::FindSecondStatistics(int left, int right) {
   return std::min(left_min, right_min);
 }
 
+void SparseTable::Preprocessing(std::vector<int> array) {
+  std::vector<int> input;
+  input.push_back(0);
+  for (int i = 1; i <= size_; i++) {
+    input.push_back(array[i]);
+  }
+  table_.push_back(input);
+  int indent = 1;
+  if (1 <= std::log2(size_)) {
+    std::vector<int> input2;
+    input2.clear();
+    input2.push_back(0);
+    for (int i = 1; i <= size_; i++) {
+      int right_border = std::min(i + indent, size_);
+      if (table_[0][i] <= table_[0][right_border]) {
+        input2.push_back(i);
+      } else {
+        input2.push_back(right_border);
+      }
+    }
+    table_.push_back(input2);
+    indent *= 2;
+  }
+  for (int k = 2; k <= std::log2(size_); k++) {
+    std::vector<int> input1;
+    input1.clear();
+    input1.push_back(0);
+    for (int i = 1; i <= size_; i++) {
+      int right_border = std::min(i + indent, size_);
+      if (table_[0][table_[k - 1][i]] <=
+          table_[0][table_[k - 1][right_border]]) {
+        input1.push_back(table_[k - 1][i]);
+      } else {
+        input1.push_back(table_[k - 1][right_border]);
+      }
+    }
+    table_.push_back(input1);
+    indent *= 2;
+  }
+}
+
 int main() {
   int size, count_of_requests;
   std::cin >> size >> count_of_requests;
-  int* a = new int[size + 1];
+  std::vector<int> array(size + 1);
   for (int i = 1; i <= size; ++i) {
-    std::cin >> a[i];
+    std::cin >> array[i];
   }
-  SparseTable my_struct(size, a);
+  SparseTable my_struct(size, array);
   for (int i = 0; i < count_of_requests; ++i) {
     int left, right;
     std::cin >> left >> right;
     std::cout << my_struct.FindSecondStatistics(left, right) << "\n";
   }
-  delete[] a;
   return 0;
 }
