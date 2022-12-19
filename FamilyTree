@@ -1,0 +1,267 @@
+#include <iostream>
+#include <random>
+#include <vector>
+struct Node {
+  long long value;
+  int priority;
+  long long size;
+  Node* left;
+  Node* right;
+  explicit Node(long long number, int prior)
+      : value(number),
+        priority(prior),
+        size(1),
+        left(nullptr),
+        right(nullptr) {}
+  explicit Node(long long number, int prior, Node* l, Node* r)
+      : value(number), priority(prior), size(1), left(l), right(r) {
+    if (l != nullptr) {
+      size += l->size;
+    }
+    if (r != nullptr) {
+      size += r->size;
+    }
+  }
+};
+class TreeHeap {
+ public:
+  void FirstInsert(long long number) {
+    root_ = new Node(number, rand() % 1'000'000'000);
+  }
+
+  TreeHeap() { root_ = nullptr; }
+
+  bool Exists(long long x) const { return ExistsAssist(root_, x); }
+  void Insert(long long x);
+  void Delete(long long x);
+  void Next(long long x);
+  void Prev(long long x);
+  void Kth(long long statistic) const;
+  ~TreeHeap() { DeleteTree(root_); }
+
+ private:
+  Node* root_;
+  long long FindLeftSize(Node* vertex) const;
+  Node* FindMin(Node* vertex) const;
+  Node* FindMax(Node* vertex) const;
+  void Update(Node* vertex);
+  Node* Merge(Node* left_root, Node* right_root);
+  std::pair<Node*, Node*> Split(Node* current, long long pivot);
+  void DeleteTree(Node* vertex1);
+  bool ExistsAssist(Node* cur, long long x) const;
+  void KthAssist(Node* vertex, long long statistic) const;
+};
+
+void TreeHeap::Insert(long long x) {
+  if (!ExistsAssist(root_, x)) {
+    std::pair<Node*, Node*> result = Split(root_, x);
+    Node* vertex = new Node(x, rand() % 1'000'000'000);
+    root_ = Merge(Merge(result.first, vertex), result.second);
+  }
+}
+
+void TreeHeap::Delete(long long x) {
+  if (Exists(x)) {
+    std::pair<Node*, Node*> result = Split(root_, x);
+    std::pair<Node*, Node*> answer = Split(result.second, x + 1);
+    delete answer.first;
+    root_ = Merge(result.first, answer.second);
+  }
+}
+
+void TreeHeap::Next(long long x) {
+  std::pair<Node*, Node*> result = Split(root_, x + 1);
+  if (result.second == nullptr) {
+    std::cout << "none"
+              << "\n";
+  } else {
+    std::cout << FindMin(result.second)->value << "\n";
+  }
+  root_ = Merge(result.first, result.second);
+}
+
+void TreeHeap::Prev(long long x) {
+  std::pair<Node*, Node*> result = Split(root_, x);
+  if (result.first == nullptr) {
+    std::cout << "none"
+              << "\n";
+  } else {
+    std::cout << FindMax(result.first)->value << "\n";
+  }
+  root_ = Merge(result.first, result.second);
+}
+
+void TreeHeap::Kth(long long statistic) const {
+  if (root_->size <= statistic) {
+    std::cout << "none"
+              << "\n";
+    return;
+  }
+  KthAssist(root_, statistic);
+}
+
+Node* TreeHeap::FindMin(Node* vertex) const {
+  while (vertex->left != nullptr) {
+    vertex = vertex->left;
+  }
+  return vertex;
+}
+
+long long TreeHeap::FindLeftSize(Node* vertex) const {
+  if (vertex == nullptr) {
+    return 0;
+  }
+  if (vertex->left == nullptr) {
+    return 0;
+  }
+  return vertex->left->size;
+}
+
+Node* TreeHeap::FindMax(Node* vertex) const {
+  while (vertex->right != nullptr) {
+    vertex = vertex->right;
+  }
+  return vertex;
+}
+
+void TreeHeap::Update(Node* vertex) {
+  vertex->size = 1;
+  if (vertex->left != nullptr) {
+    vertex->size += vertex->left->size;
+  }
+  if (vertex->right != nullptr) {
+    vertex->size += vertex->right->size;
+  }
+}
+
+Node* TreeHeap::Merge(Node* left_root, Node* right_root) {
+  if (left_root == nullptr) {
+    return right_root;
+  }
+  if (right_root == nullptr) {
+    return left_root;
+  }
+  if (left_root->priority < right_root->priority) {
+    Node* new_r = Merge(left_root->right, right_root);
+    Node* new_root =
+        new Node(left_root->value, left_root->priority, left_root->left, new_r);
+    delete left_root;
+    Update(new_root);
+    return new_root;
+  }
+  Node* new_l = Merge(left_root, right_root->left);
+  Node* new_root = new Node(right_root->value, right_root->priority, new_l,
+                            right_root->right);
+  delete right_root;
+  Update(new_root);
+  return new_root;
+}
+
+std::pair<Node*, Node*> TreeHeap::Split(Node* current, long long pivot) {
+  if (current == nullptr) {
+    return std::pair{nullptr, nullptr};
+  }
+  if (pivot > current->value) {
+    std::pair<Node*, Node*> answer = Split(current->right, pivot);
+    current->right = answer.first;
+    Update(current);
+    return std::pair{current, answer.second};
+  }
+  std::pair<Node*, Node*> answer = Split(current->left, pivot);
+  current->left = answer.second;
+  Update(current);
+  return std::pair{answer.first, current};
+}
+
+void TreeHeap::DeleteTree(Node* vertex1) {
+  if (vertex1 == nullptr) {
+    return;
+  }
+  DeleteTree(vertex1->left);
+  DeleteTree(vertex1->right);
+  delete vertex1;
+}
+
+bool TreeHeap::ExistsAssist(Node* cur, long long x) const {
+  if (cur == nullptr) {
+    return false;
+  }
+  if (cur->value == x) {
+    return true;
+  }
+  if (cur->value > x) {
+    return ExistsAssist(cur->left, x);
+  }
+  return ExistsAssist(cur->right, x);
+}
+
+void TreeHeap::KthAssist(Node* vertex, long long statistic) const {
+  if (vertex != nullptr) {
+    if (FindLeftSize(vertex) == statistic) {
+      std::cout << vertex->value << "\n";
+      return;
+    }
+    if (FindLeftSize(vertex) > statistic) {
+      KthAssist(vertex->left, statistic);
+      return;
+    }
+    KthAssist(vertex->right, statistic - FindLeftSize(vertex) - 1);
+  }
+}
+
+int main() {
+  std::mt19937 rnd(123);
+  TreeHeap my_tree;
+  bool was_insert = false;
+  std::string type;
+  long long number;
+  while (std::cin >> type) {
+    std::cin >> number;
+    if (type == "insert" && was_insert) {
+      my_tree.Insert(number);
+    }
+    if (type == "insert" && !was_insert) {
+      my_tree.FirstInsert(number);
+      was_insert = true;
+    }
+    if (type == "delete") {
+      if (was_insert) {
+        my_tree.Delete(number);
+      }
+    }
+    if (type == "exists") {
+      if (was_insert && my_tree.Exists(number)) {
+        std::cout << "true"
+                  << "\n";
+      } else {
+        std::cout << "false"
+                  << "\n";
+      }
+    }
+    if (type == "next") {
+      if (was_insert) {
+        my_tree.Next(number);
+      } else {
+        std::cout << "none"
+                  << "\n";
+      }
+    }
+    if (type == "prev") {
+      if (was_insert) {
+        my_tree.Prev(number);
+      } else {
+        std::cout << "none"
+                  << "\n";
+      }
+    }
+    if (type == "kth") {
+      if (was_insert) {
+        my_tree.Kth(number);
+      } else {
+        std::cout << "none"
+                  << "\n";
+      }
+    }
+  }
+  return 0;
+}
