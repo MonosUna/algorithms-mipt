@@ -1,0 +1,150 @@
+#include <iostream>
+struct Node {
+  int value;
+  int height;
+  Node* left;
+  Node* right;
+  Node(int number) {
+    value = number;
+    height = 1;
+    left = nullptr;
+    right = nullptr;
+  }
+};
+
+class AVLTree {
+ private:
+  Node* root_;
+  void RepairHeight(Node* vertex) {
+    vertex->height = std::max(Height(vertex->left), Height(vertex->right)) + 1;
+  }
+  int FindBalance(Node* vertex) {
+    return (Height(vertex->left) - Height(vertex->right));
+  }
+  Node* SmallLeft(Node* vertex1);
+  Node* SmallRight(Node* vertex1);
+  Node* Balance(Node* vertex1);
+  Node* AssistInsert(Node* vertex, int number);
+  void DeleteTree(Node* vertex1);
+  int Height(Node* vertex);
+  void AssistFind(Node* vertex, int number, int* minimum);
+
+ public:
+  AVLTree() { root_ = nullptr; }
+  void Insert(int number) {
+    Node* new_root = AssistInsert(root_, number);
+    root_ = new_root;
+  }
+  void Find(int number, int* minimum) { AssistFind(root_, number, minimum); }
+  ~AVLTree() { DeleteTree(root_); }
+};
+
+void AVLTree::DeleteTree(Node* vertex1) {
+  if (vertex1 == nullptr) {
+    return;
+  }
+  DeleteTree(vertex1->left);
+  DeleteTree(vertex1->right);
+  delete vertex1;
+}
+
+Node* AVLTree::SmallLeft(Node* vertex1) {
+  Node* vertex2 = vertex1->right;
+  vertex1->right = vertex2->left;
+  vertex2->left = vertex1;
+  RepairHeight(vertex1);
+  RepairHeight(vertex2);
+  return vertex2;
+}
+
+Node* AVLTree::SmallRight(Node* vertex1) {
+  Node* vertex2 = vertex1->left;
+  vertex1->left = vertex2->right;
+  vertex2->right = vertex1;
+  RepairHeight(vertex1);
+  RepairHeight(vertex2);
+  return vertex2;
+}
+
+Node* AVLTree::Balance(Node* vertex1) {
+  RepairHeight(vertex1);
+  int balance = FindBalance(vertex1);
+  if (balance == -2) {
+    if (FindBalance(vertex1->right) > 0) {
+      vertex1->right = SmallRight(vertex1->right);
+    }
+    return SmallLeft(vertex1);
+  }
+  if (balance == 2) {
+    if (FindBalance(vertex1->left) < 0) {
+      vertex1->left = SmallLeft(vertex1->left);
+    }
+    return SmallRight(vertex1);
+  }
+  return vertex1;
+}
+
+Node* AVLTree::AssistInsert(Node* vertex, int number) {
+  if (vertex == nullptr) {
+    Node* vertex1 = new Node(number);
+    return vertex1;
+  }
+  if (vertex->value < number) {
+    vertex->right = AssistInsert(vertex->right, number);
+  }
+  if (vertex->value > number) {
+    vertex->left = AssistInsert(vertex->left, number);
+  }
+  return Balance(vertex);
+}
+
+int AVLTree::Height(Node* vertex) {
+  if (vertex == nullptr) {
+    return 0;
+  }
+  return vertex->height;
+}
+
+void AVLTree::AssistFind(Node* vertex, int number, int* minimum) {
+  if (vertex == nullptr) {
+    return;
+  }
+  if (vertex->value < number) {
+    AssistFind(vertex->right, number, minimum);
+  }
+  if (vertex->value >= number) {
+    *minimum = std::min((*minimum), vertex->value);
+    AssistFind(vertex->left, number, minimum);
+  }
+}
+
+int main() {
+  int count;
+  std::cin >> count;
+  AVLTree my_tree;
+  char prev_request = '-';
+  int prev_answer = 0;
+  for (int i = 0; i < count; ++i) {
+    char type;
+    int number;
+    std::cin >> type >> number;
+    if (type == '+') {
+      if (prev_request == '?') {
+        my_tree.Insert((number + prev_answer) % 1'000'000'000);
+      } else {
+        my_tree.Insert(number);
+      }
+      prev_request = '+';
+    } else {
+      int answer = 1'000'000'001;
+      my_tree.Find(number, &answer);
+      if (answer == 1'000'000'001) {
+        answer = -1;
+      }
+      std::cout << answer << "\n";
+      prev_request = '?';
+      prev_answer = answer;
+    }
+  }
+  return 0;
+}
