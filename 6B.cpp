@@ -2,20 +2,6 @@
 #include <stack>
 #include <vector>
 
-void PrintAnswer(std::vector<std::pair<int, int>>& dp, int answer,
-                 std::vector<int>& positions) {
-  std::stack<int> order;
-  int last_index = dp[answer].second;
-  while (last_index != 0) {
-    order.push(last_index);
-    last_index = positions[last_index];
-  }
-  for (int i = 1; i <= answer; ++i) {
-    std::cout << order.top() << " ";
-    order.pop();
-  }
-}
-
 int FindPos(std::vector<std::pair<int, int>>& array, int number, int index) {
   int last = static_cast<int>(array.size() - 1);
   if (array.back().first >= number) {
@@ -39,13 +25,9 @@ int FindPos(std::vector<std::pair<int, int>>& array, int number, int index) {
   return r;
 }
 
-int main() {
-  int count, answer = 1;
-  std::cin >> count;
-  std::vector<std::pair<int, int>> dp(2);
-  std::cin >> dp[1].first;
-  dp[1].second = 1;
-  std::vector<int> positions(count + 1);
+int FindMaxLengthAndCalculateDP(int count, std::vector<std::pair<int, int>>& dp,
+                                std::vector<int>& positions) {
+  int answer = 1;
   for (int i = 2; i <= count; ++i) {
     int num;
     std::cin >> num;
@@ -55,7 +37,36 @@ int main() {
       ++answer;
     }
   }
-  std::cout << answer << "\n";
-  PrintAnswer(dp, answer, positions);
+  return answer;
+}
+
+std::stack<int> FindSequence(std::vector<std::pair<int, int>>& dp,
+                             int max_length, std::vector<int>& positions) {
+  std::stack<int> order;
+  int last_index = dp[max_length].second;
+  while (last_index != 0) {
+    order.push(last_index);
+    last_index = positions[last_index];
+  }
+  return order;
+}
+
+void PrintSequence(std::stack<int> order, int max_length) {
+  for (int i = 1; i <= max_length; ++i) {
+    std::cout << order.top() << " ";
+    order.pop();
+  }
+}
+
+int main() {
+  int count;
+  std::cin >> count;
+  std::vector<std::pair<int, int>> dp(2);
+  std::cin >> dp[1].first;
+  dp[1].second = 1;
+  std::vector<int> positions(count + 1);
+  int max_length = FindMaxLengthAndCalculateDP(count, dp, positions);
+  std::cout << max_length << "\n";
+  PrintSequence(FindSequence(dp, max_length, positions), max_length);
   return 0;
 }
