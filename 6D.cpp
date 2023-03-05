@@ -2,12 +2,14 @@
 #include <iostream>
 #include <vector>
 
-int FindAnswer(int floor, int count_of_planes) {
+int FindMinimalCountOfAttempts(int floor, int count_of_planes) {
   std::vector<int> previous_dp(floor + 1, 0);
+  //  dp[i][j] - минимальное число попыток, чтобы установить "плохой" этаж,
+  //  если высота j, используя i самолетов. Храним 2 последних столбца дп.
   for (int i = 2; i <= floor; ++i) {
     previous_dp[i] = i - 1;
   }
-  int answer = previous_dp[floor];
+  int min_attempts = previous_dp[floor];
   for (int i = 2; i <= count_of_planes; ++i) {
     std::vector<int> last_dp(floor + 1, 0);
     last_dp[1] = 0;
@@ -25,12 +27,12 @@ int FindAnswer(int floor, int count_of_planes) {
                    1;
     }
     previous_dp = last_dp;
-    answer = last_dp[floor];
+    min_attempts = last_dp[floor];
   }
   if (count_of_planes == 0 && floor > 1) {
-    answer = -1;
+    min_attempts = -1;
   }
-  return answer;
+  return min_attempts;
 }
 
 int main() {
@@ -40,6 +42,6 @@ int main() {
   if (count_of_planes > optimal_count) {
     count_of_planes = optimal_count;
   }
-  std::cout << FindAnswer(floor, count_of_planes);
+  std::cout << FindMinimalCountOfAttempts(floor, count_of_planes);
   return 0;
 }
