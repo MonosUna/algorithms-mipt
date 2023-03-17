@@ -1,9 +1,13 @@
 #include <iostream>
+#include <stack>
 #include <vector>
 
-void FindPositions(std::vector<std::vector<int>>& positions,
-                   std::vector<int>& prices, std::vector<int>& values,
-                   int resources, int count_of_assignments) {
+std::vector<std::vector<int>> FindPositions(std::vector<int>& prices,
+                                            std::vector<int>& values,
+                                            int resources,
+                                            int count_of_assignments) {
+  std::vector<std::vector<int>> positions(count_of_assignments,
+                                          std::vector<int>(resources + 1, 0));
   std::vector<int> previous_dp(resources + 1, 0), last_dp(resources + 1, 0);
   for (int i = 0; i <= resources; ++i) {
     if (i < prices[0]) {
@@ -25,21 +29,30 @@ void FindPositions(std::vector<std::vector<int>>& positions,
     }
     previous_dp = last_dp;
   }
+  return positions;
 }
 
-void FindAndDisplaySequence(std::vector<std::vector<int>>& positions,
-                            std::vector<int>& prices, int num, int sum_price) {
+void FindSequence(std::vector<std::vector<int>>& positions,
+                  std::stack<int>& sequence, std::vector<int>& prices, int num,
+                  int sum_price) {
   if (num == -1) {
     return;
   }
   if (positions[num][sum_price] == 1) {
     sum_price -= prices[num];
     --num;
-    FindAndDisplaySequence(positions, prices, num, sum_price);
-    std::cout << num + 2 << "\n";
+    sequence.push(num + 2);
+    FindSequence(positions, sequence, prices, num, sum_price);
   } else {
     --num;
-    FindAndDisplaySequence(positions, prices, num, sum_price);
+    FindSequence(positions, sequence, prices, num, sum_price);
+  }
+}
+
+void DisplaySequence(std::stack<int>& sequence) {
+  while (!sequence.empty()) {
+    std::cout << sequence.top() << "\n";
+    sequence.pop();
   }
 }
 
@@ -55,8 +68,10 @@ int main() {
   for (int i = 0; i < count_of_assignments; ++i) {
     std::cin >> values[i];
   }
-  FindPositions(positions, prices, values, resources, count_of_assignments);
-  FindAndDisplaySequence(positions, prices, count_of_assignments - 1,
-                         resources);
+  positions = FindPositions(prices, values, resources, count_of_assignments);
+  std::stack<int> sequence;
+  FindSequence(positions, sequence, prices, count_of_assignments - 1,
+               resources);
+  DisplaySequence(sequence);
   return 0;
 }
