@@ -29,8 +29,18 @@ int FindPreviousMask(int mask, int first_el, int height) {
   return ans;
 }
 
-int CalculateDPFindAnswer(std::vector<std::vector<int>>& matrix, int height,
-                          int length, int mod) {
+int FindCount(int height, std::vector<int>& prev_dp, int mod) {
+  int count = 0;
+  for (int i = 0; i < (1 << height); ++i) {
+    count += prev_dp[i];
+    count %= mod;
+  }
+  return count;
+}
+
+std::vector<int> CalculateDP(std::vector<std::vector<int>>& matrix, int mod) {
+  int length = static_cast<int>(matrix.size());
+  int height = static_cast<int>(matrix[0].size());
   std::vector<int> prev_dp(1 << height, 0), cur_dp(1 << height, 0);
   for (int mask = 0; mask < (1 << height); ++mask) {
     if (CheckCorrectness(mask, 0, matrix, height)) {
@@ -57,12 +67,7 @@ int CalculateDPFindAnswer(std::vector<std::vector<int>>& matrix, int height,
     }
     prev_dp = cur_dp;
   }
-  int answer = 0;
-  for (int i = 0; i < (1 << height); ++i) {
-    answer += prev_dp[i];
-    answer %= mod;
-  }
-  return answer;
+  return prev_dp;
 }
 
 int main() {
@@ -81,6 +86,7 @@ int main() {
       }
     }
   }
-  std::cout << CalculateDPFindAnswer(matrix, height, length, mod);
+  std::vector<int> last_column = CalculateDP(matrix, mod);
+  std::cout << FindCount(height, last_column, mod);
   return 0;
 }
