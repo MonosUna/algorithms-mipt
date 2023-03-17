@@ -2,8 +2,8 @@
 #include <stack>
 #include <vector>
 
-std::vector<std::vector<int>> FindPositions(std::vector<int>& prices,
-                                            std::vector<int>& values,
+std::vector<std::vector<int>> FindPositions(const std::vector<int>& prices,
+                                            const std::vector<int>& values,
                                             int resources,
                                             int count_of_assignments) {
   std::vector<std::vector<int>> positions(count_of_assignments,
@@ -32,9 +32,9 @@ std::vector<std::vector<int>> FindPositions(std::vector<int>& prices,
   return positions;
 }
 
-void FindSequence(std::vector<std::vector<int>>& positions,
-                  std::stack<int>& sequence, std::vector<int>& prices, int num,
-                  int sum_price) {
+void FindSequence(const std::vector<std::vector<int>>& positions,
+                  std::stack<int>& sequence, const std::vector<int>& prices,
+                  int num, int sum_price) {
   if (num == -1) {
     return;
   }
