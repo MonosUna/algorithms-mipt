@@ -5,7 +5,7 @@
 int FindPos(std::vector<std::pair<int, int>>& array, int number, int index) {
   int last = static_cast<int>(array.size() - 1);
   if (array.back().first >= number) {
-    array.push_back(std::make_pair(number, index));
+    array.emplace_back(number, index);
     return last + 1;
   }
   int l = 1, r = last;
@@ -25,19 +25,17 @@ int FindPos(std::vector<std::pair<int, int>>& array, int number, int index) {
   return r;
 }
 
-int FindMaxLengthAndCalculateDP(int count, std::vector<std::pair<int, int>>& dp,
-                                std::vector<int>& positions) {
-  int answer = 1;
+int FindMaxLength(int count, std::vector<std::pair<int, int>>& dp,
+                  std::vector<int>& positions, std::vector<int>& numbers) {
+  int max_length = 1;
   for (int i = 2; i <= count; ++i) {
-    int num;
-    std::cin >> num;
-    int pos = FindPos(dp, num, i);
+    int pos = FindPos(dp, numbers[i], i);
     positions[i] = dp[pos - 1].second;
-    if (pos > answer) {
-      ++answer;
+    if (pos > max_length) {
+      ++max_length;
     }
   }
-  return answer;
+  return max_length;
 }
 
 std::stack<int> FindSequence(std::vector<std::pair<int, int>>& dp,
@@ -51,10 +49,10 @@ std::stack<int> FindSequence(std::vector<std::pair<int, int>>& dp,
   return order;
 }
 
-void PrintSequence(std::stack<int> order, int max_length) {
+void PrintSequence(std::stack<int> sequence, int max_length) {
   for (int i = 1; i <= max_length; ++i) {
-    std::cout << order.top() << " ";
-    order.pop();
+    std::cout << sequence.top() << " ";
+    sequence.pop();
   }
 }
 
@@ -62,10 +60,14 @@ int main() {
   int count;
   std::cin >> count;
   std::vector<std::pair<int, int>> dp(2);
-  std::cin >> dp[1].first;
+  std::vector<int> numbers(count + 1);
+  for (int i = 1; i <= count; ++i) {
+    std::cin >> numbers[i];
+  }
+  dp[1].first = numbers[1];
   dp[1].second = 1;
   std::vector<int> positions(count + 1);
-  int max_length = FindMaxLengthAndCalculateDP(count, dp, positions);
+  int max_length = FindMaxLength(count, dp, positions, numbers);
   std::cout << max_length << "\n";
   PrintSequence(FindSequence(dp, max_length, positions), max_length);
   return 0;
