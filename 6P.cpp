@@ -87,6 +87,8 @@ int main() {
     }
   }
   std::vector<int> last_column = CalculateDP(matrix, mod);
+  // дп проходится по стобцам и его значение от маски - количество расстановок
+  // в таблице оканчивающихся данной маской.
   std::cout << FindCount(height, last_column, mod);
   return 0;
 }
