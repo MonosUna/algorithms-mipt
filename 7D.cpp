@@ -3,58 +3,94 @@
 #include <tuple>
 #include <vector>
 
-int tm = 0;
-
-void DFS(int vertex, std::vector<std::string>& colors,
-         std::vector<std::vector<int>>& roads,
-         std::vector<std::tuple<int, int, int>>& time,
-         std::vector<int>& touched) {
-  ++tm;
-  colors[vertex] = "GRAY";
-  std::get<1>(time[vertex]) = tm;
-  for (int x : roads[vertex]) {
-    if (colors[x] == "WHITE") {
-      DFS(x, colors, roads, time, touched);
-    }
+bool Cmp(std::pair<std::pair<int, int>, int> pair1,
+         std::pair<std::pair<int, int>, int> pair2) {
+  if (pair1.first.first > pair2.first.first) {
+    return true;
   }
-  std::get<0>(time[vertex]) = tm;
-  touched[vertex] = 1;
-  colors[vertex] = "BLACK";
+  if (pair1.first.first < pair2.first.first) {
+    return false;
+  }
+  return pair1.first.second < pair2.first.second;
 }
 
-std::vector<int> TopSort(int count_of_vertex,
-                         std::vector<std::vector<int>>& roads) {
-  std::vector<std::string> colors(count_of_vertex + 1, "WHITE");
-  std::vector<std::tuple<int, int, int>> time(count_of_vertex + 1, {0, 0, 0});
-  std::vector<int> touched(count_of_vertex + 1, 0);
-  for (int i = 1; i <= count_of_vertex; ++i) {
-    std::get<2>(time[i]) = i;
-    if (touched[i] == 0) {
-      DFS(i, colors, roads, time, touched);
+struct Graph {
+ public:
+  int count_of_vertices;
+  int count_of_edges;
+  std::vector<std::vector<int>> roads;
+  std::vector<std::vector<int>> reversed_roads;
+
+  Graph(int vertices, int edges, std::vector<std::vector<int>>& roads,
+        std::vector<std::vector<int>>& reversed_roads)
+      : count_of_vertices(vertices),
+        count_of_edges(edges),
+        roads(roads),
+        reversed_roads(reversed_roads) {}
+};
+
+struct VertexInfo {
+  std::string color;
+  int min_in;
+  int min_out;
+  bool touched;
+  int num_of_component;
+  VertexInfo() : color("WHITE"), min_in(-1), min_out(-1), touched(false) {}
+  void ResetColor() { color = "WHITE"; }
+};
+
+void DFS(int vertex, Graph& graph, int& time,
+         std::vector<VertexInfo>& vertices) {
+  ++time;
+  vertices[vertex].color = "GRAY";
+  vertices[vertex].min_in = time;
+  for (int x : graph.roads[vertex]) {
+    if (vertices[x].color == "WHITE") {
+      DFS(x, graph, time, vertices);
     }
   }
-  for (int i = 1; i <= count_of_vertex; ++i) {
-    std::get<0>(time[i]) = count_of_vertex - std::get<0>(time[i]);
+  vertices[vertex].min_out = time;
+  vertices[vertex].touched = true;
+  vertices[vertex].color = "BLACK";
+}
+
+std::vector<int> TopSort(Graph& graph) {
+  int count_of_vertices = graph.count_of_vertices;
+  std::vector<VertexInfo> vertices(count_of_vertices + 1);
+  std::vector<std::pair<std::pair<int, int>, int>> time_out;
+  for (int i = 1; i <= count_of_vertices; ++i) {
+    vertices[i].num_of_component = i;
   }
-  std::sort(time.begin(), time.end());
+  int time = 0;
+  for (int i = 1; i <= count_of_vertices; ++i) {
+    if (!vertices[i].touched) {
+      DFS(i, graph, time, vertices);
+    }
+  }
+
+  for (int i = 1; i <= count_of_vertices; ++i) {
+    time_out.push_back({{vertices[i].min_out, vertices[i].min_in}, i});
+  }
+  std::sort(time_out.begin(), time_out.end(), Cmp);
+
   std::vector<int> ans;
-  for (auto it = time.begin() + 1; it < time.end(); it++) {
-    ans.push_back(std::get<2>(*it));
+  for (std::pair<std::pair<int, int>, int> time : time_out) {
+    ans.push_back(time.second);
   }
   return ans;
 }
 
-void DfsKosaraju(int vertex, std::vector<std::string>& colors,
-                 std::vector<std::vector<int>>& reversed_roads,
-                 std::vector<int>& touched, int group) {
-  colors[vertex] = "GRAY";
-  for (int x : reversed_roads[vertex]) {
-    if (colors[x] == "WHITE") {
-      DfsKosaraju(x, colors, reversed_roads, touched, group);
+void DfsKosaraju(int vertex, Graph& graph, std::vector<VertexInfo>& vertices,
+                 int group) {
+  vertices[vertex].color = "GRAY";
+  for (int x : graph.reversed_roads[vertex]) {
+    if (vertices[x].color == "WHITE") {
+      DfsKosaraju(x, graph, vertices, group);
     }
   }
-  touched[vertex] = group;
-  colors[vertex] = "BLACK";
+  vertices[vertex].touched = true;
+  vertices[vertex].num_of_component = group;
+  vertices[vertex].color = "BLACK";
 }
 
 void Print(int group, std::vector<int>& touched) {
@@ -64,19 +100,21 @@ void Print(int group, std::vector<int>& touched) {
   }
 }
 
-void Kosaraju(int count_of_vertex,
-              std::vector<std::vector<int>>& reversed_roads,
+void Kosaraju(int count_of_vertices, Graph& graph,
               std::vector<int>& top_sorted) {
-  std::vector<std::string> colors(count_of_vertex + 1, "WHITE");
-  std::vector<int> touched(count_of_vertex + 1, 0);
+  std::vector<VertexInfo> vertices(count_of_vertices + 1);
   int group = 1;
   for (int i : top_sorted) {
-    if (touched[i] == 0) {
-      DfsKosaraju(i, colors, reversed_roads, touched, group);
+    if (!vertices[i].touched) {
+      DfsKosaraju(i, graph, vertices, group);
       ++group;
     }
   }
-  Print(group - 1, touched);
+  std::vector<int> components(count_of_vertices + 1);
+  for (int i = 0; i <= count_of_vertices; ++i) {
+    components[i] = vertices[i].num_of_component;
+  }
+  Print(group - 1, components);
 }
 
 int main() {
@@ -93,7 +131,8 @@ int main() {
       reversed_roads[b].push_back(a);
     }
   }
-  std::vector<int> top_sorted = TopSort(count_of_vertex, roads);
-  Kosaraju(count_of_vertex, reversed_roads, top_sorted);
+  Graph graph(count_of_vertex, count_of_edges, roads, reversed_roads);
+  std::vector<int> top_sorted = TopSort(graph);
+  Kosaraju(count_of_vertex, graph, top_sorted);
   return 0;
 }
