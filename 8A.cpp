@@ -1,28 +1,39 @@
+//Дано K графов. В каждом найти минимальные расстояния от заданной вершины до
+//остальных.
+
 #include <iostream>
 #include <set>
 #include <vector>
 
-struct Graph {
+class Graph {
+ private:
+  int count_of_vertices_;
+  std::vector<std::vector<std::pair<int, int>>> roads_;
+
  public:
-  int count_of_vertices;
-  std::vector<std::vector<std::pair<int, int>>> roads;
-  Graph(int count_of_vertices,
-        std::vector<std::vector<std::pair<int, int>>>& roads)
-      : count_of_vertices(count_of_vertices), roads(roads) {}
+  explicit Graph(std::vector<std::vector<std::pair<int, int>>>& roads)
+      : count_of_vertices_(static_cast<int>(roads.size())), roads_(roads) {}
+
+  std::vector<std::pair<int, int>> GetEdges(int vertex) const {
+    return roads_[vertex];
+  }
+
+  int Count() const { return count_of_vertices_; }
 };
 
-std::vector<int> CalculateMinimalDistances(Graph& graph, int vertex,
+std::vector<int> CalculateMinimalDistances(const Graph& graph, int vertex,
                                            int max_value) {
-  std::vector<int> distances(graph.count_of_vertices, max_value);
+  int count_of_vertices = graph.Count();
+  std::vector<int> distances(count_of_vertices, max_value);
   distances[vertex] = 0;
   std::set<std::pair<int, int>> min_distances;
-  for (int i = 0; i < graph.count_of_vertices; ++i) {
+  for (int i = 0; i < count_of_vertices; ++i) {
     min_distances.insert({distances[i], i});
   }
   while (!min_distances.empty()) {
     std::pair min_pair = *min_distances.begin();
     min_distances.erase(min_pair);
-    for (std::pair<int, int> edge : graph.roads[min_pair.second]) {
+    for (std::pair<int, int> edge : graph.GetEdges(min_pair.second)) {
       int value = distances[min_pair.second] + edge.second;
       if (value < distances[edge.first]) {
         min_distances.erase({distances[edge.first], edge.first});
@@ -66,7 +77,7 @@ int main() {
     std::cin >> count_of_vertices >> count_of_edges;
     auto roads = FillRoads(count_of_vertices, count_of_edges);
     std::cin >> start_vertex;
-    Graph graph(count_of_vertices, roads);
+    Graph graph(roads);
     auto distances = CalculateMinimalDistances(graph, start_vertex, kMaxValue);
     PrintDistances(distances);
   }
