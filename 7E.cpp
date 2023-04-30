@@ -2,64 +2,80 @@
 #include <iostream>
 #include <vector>
 
-struct Graph {
- public:
-  int count_of_vertex;
-  int count_of_edges;
-  std::vector<std::vector<std::pair<int, int>>> roads;
-  std::vector<int> time;
-  std::vector<int> min_in;
-  std::vector<int> touched;
-  std::vector<int> bridges;
-  int timer = 0;
-  Graph(int vertices, int edges, std::vector<std::vector<std::pair<int, int>>>& roads,
-        std::vector<int> test) : count_of_vertex(vertices),
-                                 count_of_edges(edges),
-                                 roads(roads), time(test),
-                                 min_in(test), touched(test),
-                                 bridges(std::vector<int>()) { }
-
-  void PrintBridges() {
-    std::sort(bridges.begin(), bridges.end());
-
-    std::cout << bridges.size() << "\n";
-    for (int i : bridges) {
-      std::cout << i << " ";
-    }
-  }
-
-  bool isConnected() { return std::find(touched.begin() + 1, touched.end(), 0) == touched.end(); }
+struct VertexInfo {
+  int min_in;
+  int min_out;
+  bool touched;
+  VertexInfo() : min_in(-1), min_out(-1), touched(false) {}
 };
 
-void DFS(int vertex, int parent, Graph& G) {
-  G.time[vertex] = G.timer;
-  G.touched[vertex] = 1;
-  G.min_in[vertex] = G.timer++;
-  for (std::pair x : G.roads[vertex]) {
+class Graph {
+ private:
+  int count_of_vertex_;
+  std::vector<std::vector<std::pair<int, int>>> roads_;
+
+ public:
+  explicit Graph(std::vector<std::vector<std::pair<int, int>>>& roads) : count_of_vertex_(static_cast<int>(roads.size()) - 1),
+                                                                              roads_(roads) {}
+
+  std::vector<std::pair<int, int>> GetEdges(int vertex) const { return roads_[vertex]; }
+
+
+  std::vector<int> FindBridges(std::vector<VertexInfo>& vertices);
+};
+
+void DFS(std::pair<int, int> edge, Graph& G, std::vector<int>& bridges, std::vector<VertexInfo>& vertices, int& time) {
+  int vertex = edge.first;
+  int parent = edge.second;
+  vertices[vertex].min_in = time;
+  vertices[vertex].touched = true;
+  vertices[vertex].min_out = time++;
+  for (std::pair x : G.GetEdges(vertex)) {
     int son = x.first;
     if (parent == son) {
       continue;
     }
-    if (G.touched[son] == 1) {
-      G.min_in[vertex] = std::min(G.min_in[vertex], G.time[son]);
+    if (vertices[son].touched ) {
+      vertices[vertex].min_out  = std::min(vertices[vertex].min_out , vertices[son].min_in);
     }
-    if (G.touched[son] == 0) {
-      DFS(son, vertex, G);
-      G.min_in[vertex] = std::min(G.min_in[vertex], G.min_in[son]);
-      if (G.min_in[son] == G.time[son]) {
+    if (!vertices[son].touched) {
+      DFS({son, vertex}, G, bridges, vertices, time);
+      vertices[vertex].min_out  = std::min(vertices[vertex].min_out , vertices[son].min_out);
+      if (vertices[son].min_in == vertices[son].min_out) {
         int k = 0;
-        for (auto it = G.roads[vertex].begin(); it < G.roads[vertex].end(); ++it) {
+        auto edges = G.GetEdges(vertex);
+        for (auto it = edges.begin(); it < edges.end(); ++it) {
           if ((*it).first == son) {
             ++k;
           }
         }
         if (k == 1) {
-          G.bridges.push_back(x.second);
+          bridges.push_back(x.second);
         }
       }
     }
   }
 }
+
+std::vector<int> Graph::FindBridges(std::vector<VertexInfo>& vertices) {
+  std::vector<int> bridges;
+  int time = 0;
+  for (int i = 1; i < count_of_vertex_; ++i) {
+    if (!vertices[i].touched) {
+      DFS({i, -1}, *this, bridges, vertices, time);
+    }
+  }
+  return bridges;
+}
+
+void PrintBridges(std::vector<int>& bridges) {
+  std::sort(bridges.begin(), bridges.end());
+  std::cout << bridges.size() << "\n";
+  for (int i : bridges) {
+    std::cout << i << " ";
+  }
+}
+
 
 int main() {
   int count_of_vertex, count_of_edges;
@@ -74,12 +90,9 @@ int main() {
       roads[b].emplace_back(a, i);
     }
   }
-  Graph G(count_of_vertex, count_of_edges, roads, test);
-  for (int i = 1; i < count_of_vertex; ++i) {
-    if (G.touched[i] == 0) {
-      DFS(i, -1, G);
-    }
-  }
-  G.PrintBridges();
+  Graph G(roads);
+  std::vector<VertexInfo> vertices(count_of_vertex + 1);
+  auto bridges = G.FindBridges(vertices);
+  PrintBridges(bridges);
   return 0;
 }
