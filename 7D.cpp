@@ -14,19 +14,31 @@ bool Cmp(std::pair<std::pair<int, int>, int> pair1,
   return pair1.first.second < pair2.first.second;
 }
 
-struct Graph {
- public:
-  int count_of_vertices;
-  int count_of_edges;
-  std::vector<std::vector<int>> roads;
-  std::vector<std::vector<int>> reversed_roads;
+class Graph {
+ private:
+  int count_of_vertices_;
+  std::vector<std::vector<int>> roads_;
 
-  Graph(int vertices, int edges, std::vector<std::vector<int>>& roads,
-        std::vector<std::vector<int>>& reversed_roads)
-      : count_of_vertices(vertices),
-        count_of_edges(edges),
-        roads(roads),
-        reversed_roads(reversed_roads) {}
+ public:
+  explicit Graph(std::vector<std::vector<int>>& roads)
+      : count_of_vertices_(static_cast<int>(roads.size()) - 1), roads_(roads) {}
+  std::vector<int> GetEdges(int vertex) const { return roads_[vertex]; }
+
+  std::vector<std::vector<int>> GetReversedEdges() const {
+    std::vector<std::vector<int>> reversed_roads(count_of_vertices_ + 1);
+    for (int first = 1; first <= count_of_vertices_; ++first) {
+      for (int second : roads_[first]) {
+        if (first != second && std::find(reversed_roads[second].begin(),
+                                         reversed_roads[second].end(), first) ==
+                                   reversed_roads[second].end()) {
+          reversed_roads[second].push_back(first);
+        }
+      }
+    }
+    return reversed_roads;
+  }
+
+  int Count() const { return count_of_vertices_; }
 };
 
 struct VertexInfo {
@@ -44,7 +56,7 @@ void DFS(int vertex, Graph& graph, int& time,
   ++time;
   vertices[vertex].color = "GRAY";
   vertices[vertex].min_in = time;
-  for (int x : graph.roads[vertex]) {
+  for (int x : graph.GetEdges(vertex)) {
     if (vertices[x].color == "WHITE") {
       DFS(x, graph, time, vertices);
     }
@@ -55,7 +67,7 @@ void DFS(int vertex, Graph& graph, int& time,
 }
 
 std::vector<int> TopSort(Graph& graph) {
-  int count_of_vertices = graph.count_of_vertices;
+  int count_of_vertices = graph.Count();
   std::vector<VertexInfo> vertices(count_of_vertices + 1);
   std::vector<std::pair<std::pair<int, int>, int>> time_out;
   for (int i = 1; i <= count_of_vertices; ++i) {
@@ -81,11 +93,11 @@ std::vector<int> TopSort(Graph& graph) {
 }
 
 void DfsKosaraju(int vertex, Graph& graph, std::vector<VertexInfo>& vertices,
-                 int group) {
+                 int group, std::vector<std::vector<int>>& reversed_roads) {
   vertices[vertex].color = "GRAY";
-  for (int x : graph.reversed_roads[vertex]) {
+  for (int x : reversed_roads[vertex]) {
     if (vertices[x].color == "WHITE") {
-      DfsKosaraju(x, graph, vertices, group);
+      DfsKosaraju(x, graph, vertices, group, reversed_roads);
     }
   }
   vertices[vertex].touched = true;
@@ -93,20 +105,14 @@ void DfsKosaraju(int vertex, Graph& graph, std::vector<VertexInfo>& vertices,
   vertices[vertex].color = "BLACK";
 }
 
-void Print(int group, std::vector<int>& touched) {
-  std::cout << group << "\n";
-  for (auto it = touched.begin() + 1; it < touched.end(); ++it) {
-    std::cout << *(it) << " ";
-  }
-}
-
-void Kosaraju(int count_of_vertices, Graph& graph,
-              std::vector<int>& top_sorted) {
+std::pair<std::vector<int>, int> SearchConnectivityComponents(
+    int count_of_vertices, Graph& graph, std::vector<int>& top_sorted) {
   std::vector<VertexInfo> vertices(count_of_vertices + 1);
+  std::vector<std::vector<int>> reversed_roads = graph.GetReversedEdges();
   int group = 1;
   for (int i : top_sorted) {
     if (!vertices[i].touched) {
-      DfsKosaraju(i, graph, vertices, group);
+      DfsKosaraju(i, graph, vertices, group, reversed_roads);
       ++group;
     }
   }
@@ -114,25 +120,28 @@ void Kosaraju(int count_of_vertices, Graph& graph,
   for (int i = 0; i <= count_of_vertices; ++i) {
     components[i] = vertices[i].num_of_component;
   }
-  Print(group - 1, components);
+  return {components, group - 1};
 }
 
 int main() {
   int count_of_vertex, count_of_edges;
   std::cin >> count_of_vertex >> count_of_edges;
-  std::vector<std::vector<int>> roads(count_of_vertex + 1),
-      reversed_roads(count_of_vertex + 1);
+  std::vector<std::vector<int>> roads(count_of_vertex + 1);
   for (int i = 0; i < count_of_edges; ++i) {
     int a, b;
     std::cin >> a >> b;
     if (a != b &&
         std::find(roads[a].begin(), roads[a].end(), b) == roads[a].end()) {
       roads[a].push_back(b);
-      reversed_roads[b].push_back(a);
     }
   }
-  Graph graph(count_of_vertex, count_of_edges, roads, reversed_roads);
+  Graph graph(roads);
   std::vector<int> top_sorted = TopSort(graph);
-  Kosaraju(count_of_vertex, graph, top_sorted);
+  auto groups =
+      SearchConnectivityComponents(count_of_vertex, graph, top_sorted);
+  std::cout << groups.second << "\n";
+  for (auto it = groups.first.begin() + 1; it < groups.first.end(); ++it) {
+    std::cout << *(it) << " ";
+  }
   return 0;
 }
