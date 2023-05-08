@@ -4,10 +4,6 @@
 #include <vector>
 
 struct Graph {
- private:
-  int count_of_vertices_;
-  std::vector<std::vector<int>> roads_;
-
  public:
   explicit Graph(std::vector<std::vector<int>>& roads)
       : count_of_vertices_(static_cast<int>(roads.size())), roads_(roads) {}
@@ -15,9 +11,13 @@ struct Graph {
   int Count() const { return count_of_vertices_; }
 
   std::vector<std::vector<int>> GetEdges() const { return roads_; }
+
+ private:
+  int count_of_vertices_;
+  std::vector<std::vector<int>> roads_;
 };
 
-int CheckForNegativeCycle(std::vector<std::vector<int>>& dp, int count) {
+int FindVertexInNegativeCycle(std::vector<std::vector<int>>& dp, int count) {
   for (int i = 0; i < count; ++i) {
     if (dp[i][count] < dp[i][count - 1]) {
       return i;
@@ -26,8 +26,8 @@ int CheckForNegativeCycle(std::vector<std::vector<int>>& dp, int count) {
   return -1;
 }
 
-std::vector<int> FindCycle(const std::vector<std::vector<int>>& positions, int start,
-                           int length) {
+std::vector<int> FindCycle(const std::vector<std::vector<int>>& positions,
+                           int start, int length) {
   std::vector<int> cycle = {start};
   for (int i = 0; i <= length; ++i) {
     cycle.push_back(positions[start][length - i]);
@@ -39,12 +39,14 @@ std::vector<int> FindCycle(const std::vector<std::vector<int>>& positions, int s
   return cycle;
 }
 
-std::vector<int> CalculateDPandReturnCycle(const Graph& graph, int max_value) {
+std::pair<std::vector<std::vector<int>>, std::vector<std::vector<int>>>
+CalculateDPandPrevious(const Graph& graph, int max_value) {
   int vertices = graph.Count();
   auto roads = graph.GetEdges();
   std::vector<std::vector<int>> dp(vertices,
                                    std::vector<int>(vertices + 1, max_value));
-//  ячейка dp[i][j] показывает минимальное расстояние от 0 вершины до i длины j.
+  //  ячейка dp[i][j] показывает минимальное расстояние от 0 вершины до i длины
+  //  j.
   std::vector<std::vector<int>> previous(vertices,
                                          std::vector<int>(vertices + 1, -1));
   dp[0][0] = 0;
@@ -61,10 +63,18 @@ std::vector<int> CalculateDPandReturnCycle(const Graph& graph, int max_value) {
       }
     }
   }
-  int num = CheckForNegativeCycle(dp, vertices);
+  return {dp, previous};
+}
+
+std::vector<int> GetNegativeCycle(const Graph& graph, int max_value) {
+  auto pair = CalculateDPandPrevious(graph, max_value);
+  auto dp = pair.first;
+  auto previous = pair.second;
+  int count_of_vertices = graph.Count();
+  int num = FindVertexInNegativeCycle(dp, count_of_vertices);
   std::vector<int> cycle;
   if (num != -1) {
-    cycle = FindCycle(previous, num, vertices);
+    cycle = FindCycle(previous, num, count_of_vertices);
   }
   return cycle;
 }
@@ -100,6 +110,6 @@ int main() {
   std::cin >> count_of_vertices;
   auto roads = FillRoads(count_of_vertices, kMaxValue);
   Graph graph(roads);
-  auto cycle = CalculateDPandReturnCycle(graph, kMaxValue);
+  auto cycle = GetNegativeCycle(graph, kMaxValue);
   PrintResult(cycle);
 }
