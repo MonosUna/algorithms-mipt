@@ -10,21 +10,23 @@ struct VertexInfo {
 };
 
 class Graph {
- private:
-  int count_of_vertex_;
-  std::vector<std::vector<std::pair<int, int>>> roads_;
-
  public:
-  explicit Graph(std::vector<std::vector<std::pair<int, int>>>& roads) : count_of_vertex_(static_cast<int>(roads.size()) - 1),
-                                                                              roads_(roads) {}
+  explicit Graph(std::vector<std::vector<std::pair<int, int>>>& roads) : count_of_vertices_(static_cast<int>(roads.size()) - 1),
+                                                                         roads_(roads) {}
 
   std::vector<std::pair<int, int>> GetEdges(int vertex) const { return roads_[vertex]; }
 
 
-  std::vector<int> FindBridges(std::vector<VertexInfo>& vertices);
+  std::vector<int> FindBridges();
+
+ private:
+  int count_of_vertices_;
+  std::vector<std::vector<std::pair<int, int>>> roads_;
+
 };
 
-void DFS(std::pair<int, int> edge, Graph& G, std::vector<int>& bridges, std::vector<VertexInfo>& vertices, int& time) {
+void DFS(std::pair<int, int> edge, const Graph& G, std::vector<int>& bridges,
+         std::vector<VertexInfo>& vertices, int& time) {
   int vertex = edge.first;
   int parent = edge.second;
   vertices[vertex].min_in = time;
@@ -57,10 +59,11 @@ void DFS(std::pair<int, int> edge, Graph& G, std::vector<int>& bridges, std::vec
   }
 }
 
-std::vector<int> Graph::FindBridges(std::vector<VertexInfo>& vertices) {
+std::vector<int> Graph::FindBridges() {
+  std::vector<VertexInfo> vertices(count_of_vertices_ + 1);
   std::vector<int> bridges;
   int time = 0;
-  for (int i = 1; i < count_of_vertex_; ++i) {
+  for (int i = 1; i < count_of_vertices_; ++i) {
     if (!vertices[i].touched) {
       DFS({i, -1}, *this, bridges, vertices, time);
     }
@@ -91,8 +94,7 @@ int main() {
     }
   }
   Graph G(roads);
-  std::vector<VertexInfo> vertices(count_of_vertex + 1);
-  auto bridges = G.FindBridges(vertices);
+  auto bridges = G.FindBridges();
   PrintBridges(bridges);
   return 0;
 }
