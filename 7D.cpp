@@ -34,8 +34,8 @@ std::vector<std::vector<int>> Graph::GetReversedEdges() const {
   for (int first = 1; first <= count_of_vertices_; ++first) {
     for (int second : roads_[first]) {
       if (first != second && std::find(reversed_roads[second].begin(),
-                                       reversed_roads[second].end(), first) ==
-                                       reversed_roads[second].end()) {
+                                       reversed_roads[second].end(),
+                                       first) == reversed_roads[second].end()) {
         reversed_roads[second].push_back(first);
       }
     }
