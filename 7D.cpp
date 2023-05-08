@@ -15,31 +15,33 @@ bool Cmp(std::pair<std::pair<int, int>, int> pair1,
 }
 
 class Graph {
- private:
-  int count_of_vertices_;
-  std::vector<std::vector<int>> roads_;
-
  public:
   explicit Graph(std::vector<std::vector<int>>& roads)
       : count_of_vertices_(static_cast<int>(roads.size()) - 1), roads_(roads) {}
   std::vector<int> GetEdges(int vertex) const { return roads_[vertex]; }
 
-  std::vector<std::vector<int>> GetReversedEdges() const {
-    std::vector<std::vector<int>> reversed_roads(count_of_vertices_ + 1);
-    for (int first = 1; first <= count_of_vertices_; ++first) {
-      for (int second : roads_[first]) {
-        if (first != second && std::find(reversed_roads[second].begin(),
-                                         reversed_roads[second].end(), first) ==
-                                   reversed_roads[second].end()) {
-          reversed_roads[second].push_back(first);
-        }
-      }
-    }
-    return reversed_roads;
-  }
+  std::vector<std::vector<int>> GetReversedEdges() const;
 
   int Count() const { return count_of_vertices_; }
+
+ private:
+  int count_of_vertices_;
+  std::vector<std::vector<int>> roads_;
 };
+
+std::vector<std::vector<int>> Graph::GetReversedEdges() const {
+  std::vector<std::vector<int>> reversed_roads(count_of_vertices_ + 1);
+  for (int first = 1; first <= count_of_vertices_; ++first) {
+    for (int second : roads_[first]) {
+      if (first != second && std::find(reversed_roads[second].begin(),
+                                       reversed_roads[second].end(), first) ==
+                                       reversed_roads[second].end()) {
+        reversed_roads[second].push_back(first);
+      }
+    }
+  }
+  return reversed_roads;
+}
 
 struct VertexInfo {
   std::string color;
@@ -51,7 +53,7 @@ struct VertexInfo {
   void ResetColor() { color = "WHITE"; }
 };
 
-void DFS(int vertex, Graph& graph, int& time,
+void DFS(int vertex, const Graph& graph, int& time,
          std::vector<VertexInfo>& vertices) {
   ++time;
   vertices[vertex].color = "GRAY";
@@ -66,7 +68,7 @@ void DFS(int vertex, Graph& graph, int& time,
   vertices[vertex].color = "BLACK";
 }
 
-std::vector<int> TopSort(Graph& graph) {
+std::vector<int> TopSort(const Graph& graph) {
   int count_of_vertices = graph.Count();
   std::vector<VertexInfo> vertices(count_of_vertices + 1);
   std::vector<std::pair<std::pair<int, int>, int>> time_out;
@@ -85,19 +87,20 @@ std::vector<int> TopSort(Graph& graph) {
   }
   std::sort(time_out.begin(), time_out.end(), Cmp);
 
-  std::vector<int> ans;
+  std::vector<int> top_sorted_vertices;
   for (std::pair<std::pair<int, int>, int> time : time_out) {
-    ans.push_back(time.second);
+    top_sorted_vertices.push_back(time.second);
   }
-  return ans;
+  return top_sorted_vertices;
 }
 
-void DfsKosaraju(int vertex, Graph& graph, std::vector<VertexInfo>& vertices,
-                 int group, std::vector<std::vector<int>>& reversed_roads) {
+void DFSwithGroupAssigment(
+    int vertex, const Graph& graph, std::vector<VertexInfo>& vertices,
+    int group, const std::vector<std::vector<int>>& reversed_roads) {
   vertices[vertex].color = "GRAY";
   for (int x : reversed_roads[vertex]) {
     if (vertices[x].color == "WHITE") {
-      DfsKosaraju(x, graph, vertices, group, reversed_roads);
+      DFSwithGroupAssigment(x, graph, vertices, group, reversed_roads);
     }
   }
   vertices[vertex].touched = true;
@@ -112,7 +115,7 @@ std::pair<std::vector<int>, int> SearchConnectivityComponents(
   int group = 1;
   for (int i : top_sorted) {
     if (!vertices[i].touched) {
-      DfsKosaraju(i, graph, vertices, group, reversed_roads);
+      DFSwithGroupAssigment(i, graph, vertices, group, reversed_roads);
       ++group;
     }
   }
