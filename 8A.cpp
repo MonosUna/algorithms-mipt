@@ -1,15 +1,11 @@
-//Дано K графов. В каждом найти минимальные расстояния от заданной вершины до
-//остальных.
+// Дано K графов. В каждом найти минимальные расстояния от заданной вершины до
+// остальных.
 
 #include <iostream>
 #include <set>
 #include <vector>
 
 class Graph {
- private:
-  int count_of_vertices_;
-  std::vector<std::vector<std::pair<int, int>>> roads_;
-
  public:
   explicit Graph(std::vector<std::vector<std::pair<int, int>>>& roads)
       : count_of_vertices_(static_cast<int>(roads.size())), roads_(roads) {}
@@ -19,6 +15,10 @@ class Graph {
   }
 
   int Count() const { return count_of_vertices_; }
+
+ private:
+  int count_of_vertices_;
+  std::vector<std::vector<std::pair<int, int>>> roads_;
 };
 
 std::vector<int> CalculateMinimalDistances(const Graph& graph, int vertex,
