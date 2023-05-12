@@ -3,7 +3,16 @@
 #include <iostream>
 #include <vector>
 
-struct Graph {
+struct DistanceInfo {
+  std::vector<std::vector<int>> minimal_distances_along_the_edges;
+  std::vector<std::vector<int>> previous_vertex_on_the_path;
+  DistanceInfo(std::vector<std::vector<int>>& dp,
+               std::vector<std::vector<int>>& previous)
+      : minimal_distances_along_the_edges(dp),
+        previous_vertex_on_the_path(previous) {}
+};
+
+class Graph {
  public:
   explicit Graph(std::vector<std::vector<int>>& roads)
       : count_of_vertices_(static_cast<int>(roads.size())), roads_(roads) {}
@@ -17,7 +26,8 @@ struct Graph {
   std::vector<std::vector<int>> roads_;
 };
 
-int FindVertexInNegativeCycle(std::vector<std::vector<int>>& dp, int count) {
+int FindVertexInNegativeCycle(const std::vector<std::vector<int>>& dp,
+                              int count) {
   for (int i = 0; i < count; ++i) {
     if (dp[i][count] < dp[i][count - 1]) {
       return i;
@@ -26,8 +36,8 @@ int FindVertexInNegativeCycle(std::vector<std::vector<int>>& dp, int count) {
   return -1;
 }
 
-std::vector<int> FindCycle(const std::vector<std::vector<int>>& positions,
-                           int start, int length) {
+std::vector<int> CreateCycle(const std::vector<std::vector<int>>& positions,
+                             int start, int length) {
   std::vector<int> cycle = {start};
   for (int i = 0; i <= length; ++i) {
     cycle.push_back(positions[start][length - i]);
@@ -39,8 +49,7 @@ std::vector<int> FindCycle(const std::vector<std::vector<int>>& positions,
   return cycle;
 }
 
-std::pair<std::vector<std::vector<int>>, std::vector<std::vector<int>>>
-CalculateDPandPrevious(const Graph& graph, int max_value) {
+DistanceInfo CalculateDPandPrevious(const Graph& graph, int max_value) {
   int vertices = graph.Count();
   auto roads = graph.GetEdges();
   std::vector<std::vector<int>> dp(vertices,
@@ -67,14 +76,14 @@ CalculateDPandPrevious(const Graph& graph, int max_value) {
 }
 
 std::vector<int> GetNegativeCycle(const Graph& graph, int max_value) {
-  auto pair = CalculateDPandPrevious(graph, max_value);
-  auto dp = pair.first;
-  auto previous = pair.second;
+  DistanceInfo info = CalculateDPandPrevious(graph, max_value);
+  auto minimal_distances = info.minimal_distances_along_the_edges;
+  auto previous_vertex_on_the_path = info.previous_vertex_on_the_path;
   int count_of_vertices = graph.Count();
-  int num = FindVertexInNegativeCycle(dp, count_of_vertices);
+  int num = FindVertexInNegativeCycle(minimal_distances, count_of_vertices);
   std::vector<int> cycle;
   if (num != -1) {
-    cycle = FindCycle(previous, num, count_of_vertices);
+    cycle = CreateCycle(previous_vertex_on_the_path, num, count_of_vertices);
   }
   return cycle;
 }
