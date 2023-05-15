@@ -2,7 +2,7 @@
 #include <vector>
 
 void dfs(int vertex, std::vector<bool>& used,
-             const std::vector<std::vector<int>>& edges) {
+         const std::vector<std::vector<int>>& edges) {
   if (used[vertex]) {
     return;
   }
@@ -12,30 +12,17 @@ void dfs(int vertex, std::vector<bool>& used,
       dfs(to, used, edges);
     }
   }
-  return;
 }
 
-
-int main() {
-  int first_part_size, second_part_size;
-  std::cin >> first_part_size >> second_part_size;
-  std::vector<std::vector<int>> first_edges(first_part_size);
-  for (int i = 0; i < first_part_size; ++i) {
-    int count_of_current_vertex_edges;
-    std::cin >> count_of_current_vertex_edges;
-    std::vector<int> edges_for_current_vertex(count_of_current_vertex_edges);
-    for (int k = 0 ; k < count_of_current_vertex_edges; ++k) {
-      std::cin >> edges_for_current_vertex[k];
-      edges_for_current_vertex[k] += first_part_size - 1;
-    }
-    first_edges[i] = edges_for_current_vertex;
-  }
+std::pair<std::vector<int>, std::vector<int>> FindMinimalControlSet(
+    int first_part_size, int second_part_size,
+    std::vector<std::vector<int>>& first_edges) {
   std::vector<int> match(first_part_size);
-  for(int i = 0; i < first_part_size; ++i) {
+  for (int i = 0; i < first_part_size; ++i) {
     int matching_to_current_vertex;
     std::cin >> matching_to_current_vertex;
     if (matching_to_current_vertex != 0)
-    match[i] = matching_to_current_vertex + first_part_size - 1;
+      match[i] = matching_to_current_vertex + first_part_size - 1;
     else {
       match[i] = -1;
     }
@@ -65,6 +52,27 @@ int main() {
       second_part_coverage.push_back(i - first_part_size + 1);
     }
   }
+  return {first_part_coverage, second_part_coverage};
+}
+
+int main() {
+  int first_part_size, second_part_size;
+  std::cin >> first_part_size >> second_part_size;
+  std::vector<std::vector<int>> first_edges(first_part_size);
+  for (int i = 0; i < first_part_size; ++i) {
+    int count_of_current_vertex_edges;
+    std::cin >> count_of_current_vertex_edges;
+    std::vector<int> edges_for_current_vertex(count_of_current_vertex_edges);
+    for (int k = 0; k < count_of_current_vertex_edges; ++k) {
+      std::cin >> edges_for_current_vertex[k];
+      edges_for_current_vertex[k] += first_part_size - 1;
+    }
+    first_edges[i] = edges_for_current_vertex;
+  }
+  auto first_and_second_part =
+      FindMinimalControlSet(first_part_size, second_part_size, first_edges);
+  auto first_part_coverage = first_and_second_part.first;
+  auto second_part_coverage = first_and_second_part.second;
   std::cout << first_part_coverage.size() + second_part_coverage.size() << "\n";
   std::cout << first_part_coverage.size() << " ";
   for (int i : first_part_coverage) {
