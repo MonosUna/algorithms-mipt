@@ -14,9 +14,23 @@ void dfs(int vertex, std::vector<bool>& used,
   }
 }
 
-std::pair<std::vector<int>, std::vector<int>> FindMinimalControlSet(
-    int first_part_size, int second_part_size,
-    std::vector<std::vector<int>>& first_edges) {
+class BipartiteGraph {
+ private:
+  int count_of_vertices;
+  int first_part_size;
+  int second_part_size;
+  std::vector<std::vector<int>> from_first_edges;
+
+ public:
+  BipartiteGraph(int first_part_size, int second_part_size, std::vector<std::vector<int>>& edges)
+      : first_part_size(first_part_size), second_part_size(second_part_size),
+        count_of_vertices(first_part_size + second_part_size), from_first_edges(edges) {}
+
+  std::pair<std::vector<int>, std::vector<int>> FindMinimalControlSet();
+};
+
+
+std::pair<std::vector<int>, std::vector<int>> BipartiteGraph::FindMinimalControlSet() {
   std::vector<int> match(first_part_size);
   for (int i = 0; i < first_part_size; ++i) {
     int matching_to_current_vertex;
@@ -29,7 +43,7 @@ std::pair<std::vector<int>, std::vector<int>> FindMinimalControlSet(
   }
   std::vector<std::vector<int>> edges(first_part_size + second_part_size);
   for (int i = 0; i < first_part_size; ++i) {
-    for (int to : first_edges[i]) {
+    for (int to : from_first_edges[i]) {
       if (to == match[i]) {
         edges[to].push_back(i);
       } else {
@@ -69,8 +83,9 @@ int main() {
     }
     first_edges[i] = edges_for_current_vertex;
   }
+  BipartiteGraph graph(first_part_size, second_part_size, first_edges);
   auto first_and_second_part =
-      FindMinimalControlSet(first_part_size, second_part_size, first_edges);
+      graph.FindMinimalControlSet();
   auto first_part_coverage = first_and_second_part.first;
   auto second_part_coverage = first_and_second_part.second;
   std::cout << first_part_coverage.size() + second_part_coverage.size() << "\n";
@@ -82,6 +97,5 @@ int main() {
   for (int i : second_part_coverage) {
     std::cout << i << " ";
   }
-
   return 0;
 }
