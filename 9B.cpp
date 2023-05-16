@@ -1,13 +1,10 @@
+#include <algorithm>
 #include <iostream>
 #include <vector>
-#include <algorithm>
 
 class DSU {
-  std::vector<int> sets;
-  std::vector<int> dimensions;
-
  public:
-  DSU(int size)
+  explicit DSU(int size)
       : sets(std::vector<int>(size + 1)),
         dimensions(std::vector<int>(size + 1, 0)) {
     for (int i = 1; i <= size; ++i) {
@@ -34,13 +31,41 @@ class DSU {
       dimensions[parent2] += parent1;
     }
   }
+
+ private:
+  std::vector<int> sets;
+  std::vector<int> dimensions;
+};
+
+class Graph {
+ public:
+  explicit Graph(int count_of_vertices,
+                 std::vector<std::pair<int, std::pair<int, int>>>& roads)
+      : count_of_vertices(count_of_vertices), edges(roads) {}
+  int calculateMST() const {
+    int sum = 0;
+    DSU set(count_of_vertices);
+    for (std::pair<int, std::pair<int, int>> edge : edges) {
+      int first = edge.second.first;
+      int second = edge.second.second;
+      int weight = edge.first;
+      if (set.find(first) != set.find(second)) {
+        set.union_(first, second);
+        sum += weight;
+      }
+    }
+    return sum;
+  }
+
+ private:
+  int count_of_vertices;
+  std::vector<std::pair<int, std::pair<int, int>>> edges;
 };
 
 int main() {
   int count_of_vertices;
   int count_of_edges;
   std::cin >> count_of_vertices >> count_of_edges;
-  DSU set(count_of_vertices);
   std::vector<std::pair<int, std::pair<int, int>>> edges;
   for (int i = 1; i <= count_of_edges; ++i) {
     std::pair<int, std::pair<int, int>> my_pair;
@@ -48,16 +73,7 @@ int main() {
     edges.push_back(my_pair);
   }
   std::sort(edges.begin(), edges.end());
-  int sum = 0;
-  for (std::pair<int, std::pair<int, int>> edge : edges) {
-    int first = edge.second.first;
-    int second = edge.second.second;
-    int weight = edge.first;
-    if (set.find(first) != set.find(second)) {
-      set.union_(first, second);
-      sum += weight;
-    }
-  }
-  std::cout << sum;
+  Graph graph(count_of_vertices, edges);
+  std::cout << graph.calculateMST();
   return 0;
 }
