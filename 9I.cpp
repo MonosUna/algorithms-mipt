@@ -22,15 +22,18 @@ class BipartiteGraph {
   std::vector<std::vector<int>> from_first_edges;
 
  public:
-  BipartiteGraph(int first_part_size, int second_part_size, std::vector<std::vector<int>>& edges)
-      : first_part_size(first_part_size), second_part_size(second_part_size),
-        count_of_vertices(first_part_size + second_part_size), from_first_edges(edges) {}
+  explicit BipartiteGraph(int first_part_size, int second_part_size,
+                          std::vector<std::vector<int>>& edges)
+      : first_part_size(first_part_size),
+        second_part_size(second_part_size),
+        count_of_vertices(first_part_size + second_part_size),
+        from_first_edges(edges) {}
 
   std::pair<std::vector<int>, std::vector<int>> FindMinimalControlSet();
 };
 
-
-std::pair<std::vector<int>, std::vector<int>> BipartiteGraph::FindMinimalControlSet() {
+std::pair<std::vector<int>, std::vector<int>>
+BipartiteGraph::FindMinimalControlSet() {
   std::vector<int> match(first_part_size);
   for (int i = 0; i < first_part_size; ++i) {
     int matching_to_current_vertex;
@@ -84,8 +87,7 @@ int main() {
     first_edges[i] = edges_for_current_vertex;
   }
   BipartiteGraph graph(first_part_size, second_part_size, first_edges);
-  auto first_and_second_part =
-      graph.FindMinimalControlSet();
+  auto first_and_second_part = graph.FindMinimalControlSet();
   auto first_part_coverage = first_and_second_part.first;
   auto second_part_coverage = first_and_second_part.second;
   std::cout << first_part_coverage.size() + second_part_coverage.size() << "\n";
