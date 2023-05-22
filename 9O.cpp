@@ -5,13 +5,13 @@
 
 class Network {
  public:
-  explicit Network(double g, const std::vector<std::pair<int, int>>& other_edges,
+  explicit Network(double g,
+                   const std::vector<std::pair<int, int>>& other_edges,
                    int count_of_vertices, const std::vector<int>& degrees);
 
   std::vector<int> FindMinCut();
 
  private:
-
   struct Edge {
     int from;
     int to;
@@ -128,9 +128,9 @@ Network::Network(double g, const std::vector<std::pair<int, int>>& other_edges,
     vertices1[0].edges_nums.push_back(e);
     vertices1[i].edges_nums.push_back(e + 1);
     e += 2;
-    edges.emplace_back(
-        i, finish, edges_capacity + 2 * g - static_cast<double>(degrees[i]),
-        0.0);
+    edges.emplace_back(i, finish,
+                       edges_capacity + 2 * g - static_cast<double>(degrees[i]),
+                       0.0);
     edges.emplace_back(finish, i, 0.0, 0.0);
     vertices1[i].edges_nums.push_back(e);
     vertices1[finish].edges_nums.push_back(e + 1);
@@ -172,16 +172,39 @@ std::vector<int> Network::FindMinCut() {
   return vertices_in_min_cut;
 }
 
-std::vector<int> FindMaxDensitySubgraph(
-    int count_of_vertices, int count_of_edges,
-    const std::vector<std::pair<int, int>>& edges,
-    const std::vector<int>& degrees) {
+class Graph {
+ public:
+  Graph(int count_of_vertices, int count_of_edges,
+        std::vector<std::pair<int, int>>& edges)
+      : count_of_vertices(count_of_vertices),
+        count_of_edges(count_of_edges),
+        edges(edges) {}
+  std::vector<int> GetDegreesOfVertices() const;
+  std::vector<int> FindMaxDensitySubgraph() const;
+
+ private:
+  int count_of_vertices;
+  int count_of_edges;
+  std::vector<std::pair<int, int>> edges;
+};
+
+std::vector<int> Graph::GetDegreesOfVertices() const {
+  std::vector<int> degrees(count_of_vertices + 1, 0);
+  for (int e = 0; e < count_of_edges; ++e) {
+    degrees[edges[e].first] += 1;
+    degrees[edges[e].second] += 1;
+  }
+  return degrees;
+}
+
+std::vector<int> Graph::FindMaxDensitySubgraph() const {
   double left = 0.0;
   auto right = static_cast<double>(count_of_edges);
   auto minimal_distance =
       1.0 / static_cast<double>(count_of_vertices * count_of_vertices -
           count_of_vertices);
   std::vector<int> vertices_in_subgraph;
+  auto degrees = GetDegreesOfVertices();
   while (right - left >= minimal_distance) {
     double medium = (right + left) / 2;
     Network net(medium, edges, count_of_vertices, degrees);
@@ -200,16 +223,13 @@ int main() {
   int count_of_vertices, count_of_edges;
   std::cin >> count_of_vertices >> count_of_edges;
   std::vector<std::pair<int, int>> edges;
-  std::vector<int> degrees(count_of_vertices + 1, 0);
   for (int e = 0; e < count_of_edges; ++e) {
     int to, from;
     std::cin >> from >> to;
     edges.emplace_back(to, from);
-    degrees[from] += 1;
-    degrees[to] += 1;
   }
-  auto vertices_in_subgraph =
-      FindMaxDensitySubgraph(count_of_vertices, count_of_edges, edges, degrees);
+  Graph graph(count_of_vertices, count_of_edges, edges);
+  auto vertices_in_subgraph = graph.FindMaxDensitySubgraph();
   if (count_of_edges == 0) {
     std::cout << 1 << "\n" << 1;
     return 0;
